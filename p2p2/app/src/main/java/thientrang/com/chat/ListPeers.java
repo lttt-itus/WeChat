@@ -68,7 +68,7 @@ public class ListPeers extends AppCompatActivity {
                     byte[] readBuff = (byte[]) msg.obj;
                     String tempMsg = new String(readBuff, 0, msg.arg1);
                     //read_msg_box.setText(tempMsg);
-                    Toast.makeText(ListPeers.this, "tempMsg", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ListPeers.this, tempMsg, Toast.LENGTH_SHORT).show();
                     break;
             }
             return true;
@@ -91,7 +91,6 @@ public class ListPeers extends AppCompatActivity {
                         Toast.makeText(ListPeers.this, "Searching....", Toast.LENGTH_SHORT).show();
 
                     }
-
                     @Override
                     public void onFailure(int reason) {
                         Toast.makeText(ListPeers.this, "Search failed", Toast.LENGTH_SHORT).show();
@@ -124,15 +123,13 @@ public class ListPeers extends AppCompatActivity {
         public void onConnectionInfoAvailable(WifiP2pInfo info) {
             final InetAddress groupOwnerAddress = info.groupOwnerAddress;
             if (info.groupFormed && info.isGroupOwner) {
-                Toast.makeText(getApplicationContext(), "Host", Toast.LENGTH_SHORT).show();
-                //ConnectionStatus.setText("Host");
                 serverClass = new ServerClass();
                 serverClass.start();
+                Toast.makeText(ListPeers.this, "Host", Toast.LENGTH_SHORT).show();
             }else if (info.groupFormed){
-                //ConnectionStatus.setText("Client");
-                Toast.makeText(getApplicationContext(), "Client", Toast.LENGTH_SHORT).show();
                 clientClass= new ClientClass(groupOwnerAddress);
                 clientClass.start();
+                Toast.makeText(ListPeers.this, "Client", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -150,7 +147,7 @@ public class ListPeers extends AppCompatActivity {
                     deviceArray[index] = device;
                     index++;
                 }
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNamearray);
+                ArrayAdapter<String>adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNamearray);
                 listView.setAdapter(adapter);
             }
             if (peers.size()==0){
@@ -170,6 +167,7 @@ public class ListPeers extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(mReceiver);
     }
+
 
     private class SendRecieve extends Thread{
         private Socket socket;
