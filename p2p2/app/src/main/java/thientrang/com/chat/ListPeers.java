@@ -1,26 +1,23 @@
-/*package thientrang.com.chat;
+package thientrang.com.chat;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -33,33 +30,34 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * Created by THIEN TRANG on 05/05/2018.
+ */
 
-    Button btnOnOff, btnDiscover, btnSend;
+public class ListPeers extends AppCompatActivity {
+    ImageView btn_search, btn_back;
     ListView listView;
-    TextView read_msg_box, ConnectionStatus;
-    EditText writeMsg;
 
     WifiManager wifiManager;
     WifiP2pManager mManager;
     WifiP2pManager.Channel mChannel;
-
     BroadcastReceiver mReceiver;
     IntentFilter mIntentFilter;
     List<WifiP2pDevice> peers = new ArrayList<>();
-    String[] deviceNameArray;
-    WifiP2pDevice[] devideArray;
+    String[] deviceNamearray;
+    WifiP2pDevice[] deviceArray;
 
     static final int MESSAGE_READ=1;
     ServerClass serverClass;
     ClientClass clientClass;
     SendRecieve sendRecieve;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        initialWork();
-        exqListner();
+        setContentView(R.layout.list_peers);
+        init();
+        action();
     }
 
     Handler handler = new Handler(new Handler.Callback() {
@@ -69,81 +67,44 @@ public class MainActivity extends AppCompatActivity {
                 case MESSAGE_READ:
                     byte[] readBuff = (byte[]) msg.obj;
                     String tempMsg = new String(readBuff, 0, msg.arg1);
-                    read_msg_box.setText(tempMsg);
+                    //read_msg_box.setText(tempMsg);
+                    Toast.makeText(ListPeers.this, "tempMsg", Toast.LENGTH_SHORT).show();
                     break;
             }
             return true;
         }
     });
-
-    private void exqListner() {
-        btnOnOff.setOnClickListener(new View.OnClickListener() {
+    private void action() {
+        btn_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (wifiManager.isWifiEnabled()){
-                    wifiManager.setWifiEnabled(false);
-                    btnOnOff.setText("ON");
-                }else{
-                    wifiManager.setWifiEnabled(true);
-                    btnOnOff.setText("OFF");
-                }
+
             }
         });
 
-        btnDiscover.setOnClickListener(new View.OnClickListener() {
+        btn_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        ConnectionStatus.setText("Discovery Started");
+                        Toast.makeText(ListPeers.this, "Searching....", Toast.LENGTH_SHORT).show();
+
                     }
 
                     @Override
                     public void onFailure(int reason) {
-                        ConnectionStatus.setText("Discovery Starting Failed");
+                        Toast.makeText(ListPeers.this, "Search failed", Toast.LENGTH_SHORT).show();
                     }
                 });
-            }
-        });
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final WifiP2pDevice device=devideArray[position];
-                WifiP2pConfig config = new WifiP2pConfig();
-                config.deviceAddress=device.deviceAddress;
-                mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(getApplicationContext(), "Connected to " + device.deviceName, Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(int reason) {
-                        Toast.makeText(getApplicationContext(), "No connection", Toast.LENGTH_SHORT).show();
-
-                    }
-                });
-            }
-        });
-        btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String msg = writeMsg.getText().toString();
-                //byte[] buffer =
-                sendRecieve.write(msg.getBytes());
             }
         });
     }
 
-    private void initialWork() {
-        btnOnOff = (Button)findViewById(R.id.onOff);
-        btnDiscover = (Button)findViewById(R.id.discover);
-        btnSend = (Button)findViewById(R.id.sendButton);
-        listView = (ListView)findViewById(R.id.peerListView);
-        read_msg_box = (TextView)findViewById(R.id.readMsg);
-        ConnectionStatus = (TextView)findViewById(R.id.connectionStatus);
-        writeMsg = (EditText)findViewById(R.id.writeMsg);
+    private void init() {
+        btn_back = (ImageView) findViewById(R.id.btn_back);
+        btn_search = (ImageView) findViewById(R.id.btn_search);
+        listView = (ListView) findViewById(R.id.listpeers);
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
@@ -157,16 +118,19 @@ public class MainActivity extends AppCompatActivity {
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
     }
+
     WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo info) {
             final InetAddress groupOwnerAddress = info.groupOwnerAddress;
             if (info.groupFormed && info.isGroupOwner) {
-                ConnectionStatus.setText("Host");
+                Toast.makeText(getApplicationContext(), "Host", Toast.LENGTH_SHORT).show();
+                //ConnectionStatus.setText("Host");
                 serverClass = new ServerClass();
                 serverClass.start();
             }else if (info.groupFormed){
-                ConnectionStatus.setText("Client");
+                //ConnectionStatus.setText("Client");
+                Toast.makeText(getApplicationContext(), "Client", Toast.LENGTH_SHORT).show();
                 clientClass= new ClientClass(groupOwnerAddress);
                 clientClass.start();
             }
@@ -178,15 +142,15 @@ public class MainActivity extends AppCompatActivity {
             if (!peersList.getDeviceList().equals(peers)){
                 peers.clear();
                 peers.addAll(peersList.getDeviceList());
-                deviceNameArray = new String[peersList.getDeviceList().size()];
-                devideArray = new WifiP2pDevice[peersList.getDeviceList().size()];
+                deviceNamearray = new String[peersList.getDeviceList().size()];
+                deviceArray = new WifiP2pDevice[peersList.getDeviceList().size()];
                 int index=0;
                 for (WifiP2pDevice device:peersList.getDeviceList()){
-                    deviceNameArray[index] = device.deviceName;
-                    devideArray[index] = device;
+                    deviceNamearray[index] = device.deviceName;
+                    deviceArray[index] = device;
                     index++;
                 }
-                ArrayAdapter<String>adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNamearray);
                 listView.setAdapter(adapter);
             }
             if (peers.size()==0){
@@ -206,7 +170,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(mReceiver);
     }
-
 
     private class SendRecieve extends Thread{
         private Socket socket;
@@ -285,5 +248,4 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-
-}*/
+}
