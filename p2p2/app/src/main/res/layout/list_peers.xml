@@ -21,7 +21,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="200dp"
-        android:id="@+id/listpeers"/>
+        android:id="@+id/listpeers" />
 
     <ImageView
         android:id="@+id/btn_back"
