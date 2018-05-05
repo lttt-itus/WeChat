@@ -32,7 +32,8 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void init() {
-        btn_go = (Button) findViewById(R.id.btn_go);
+        btn_go = (Button) findViewById(R.id.btn_goes);
+
     }
 
 }
